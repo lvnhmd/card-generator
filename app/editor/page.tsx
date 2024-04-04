@@ -5,40 +5,44 @@ import { RoughNotation } from "react-rough-notation";
 
 const Editor: React.FC = () => {
   const [words, setWords] = useState<string[]>([]);
-  const [currentWordIndex, setCurrentWordIndex] = useState<number>(0);
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1); // Start before the first word
+  const [showAnnotation, setShowAnnotation] = useState<boolean>(false);
 
   useEffect(() => {
     const storedText = sessionStorage.getItem('fileContent');
     if (storedText) {
-      // Split the stored text into words
       const wordsArray = storedText.split(/\s+/);
       setWords(wordsArray);
     }
   }, []);
 
   useEffect(() => {
-    // Set an interval to update the currentWordIndex, simulating reading
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prevIndex) => {
-        // Check if we've reached the end of the words array
-        if (prevIndex < words.length - 1) {
-          return prevIndex + 1;
-        } else {
-          clearInterval(interval); // Stop the animation by clearing the interval
-          return prevIndex; // Keep the index at the last word
-        }
-      });
-    }, 250); // Adjust the interval as needed
+    // Proceed if there are words to display
+    if (words.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentWordIndex((prevIndex) => {
+          const nextIndex = prevIndex + 1;
+          if (nextIndex < words.length) {
+            setShowAnnotation(true); // Show annotation for the next word
+            return nextIndex;
+          } else {
+            // Once the end is reached, hide the annotation after a delay
+            setTimeout(() => setShowAnnotation(false), 250); // Adjust delay as needed
+            clearInterval(interval); // Stop the interval
+            return prevIndex; // Keep the index at the last word without incrementing
+          }
+        });
+      }, 250); // Interval for moving to the next word
 
-    return () => clearInterval(interval);
+      return () => clearInterval(interval);
+    }
   }, [words]);
 
   return (
     <div className="relative min-h-[500px] w-full max-w-screen-lg border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:shadow-lg">
-      {/* Display the text with the current word highlighted */}
       {words.map((word, index) => (
         <span key={index}>
-          {index === currentWordIndex ? (
+          {index === currentWordIndex && showAnnotation ? (
             <RoughNotation type="box" show={true} color="#FFD700" animate={false}>
               {word}
             </RoughNotation>
