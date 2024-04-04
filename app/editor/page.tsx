@@ -1,7 +1,7 @@
 "use client"
-// pages/editor.tsx
+
 import { useEffect, useState } from 'react';
-import { RoughNotation, RoughNotationGroup } from "react-rough-notation";
+import { RoughNotation } from "react-rough-notation";
 
 const Editor: React.FC = () => {
   const [words, setWords] = useState<string[]>([]);
@@ -20,11 +20,12 @@ const Editor: React.FC = () => {
     // Set an interval to update the currentWordIndex, simulating reading
     const interval = setInterval(() => {
       setCurrentWordIndex((prevIndex) => {
-        // If we reach the end of the words array, start over
+        // Check if we've reached the end of the words array
         if (prevIndex < words.length - 1) {
           return prevIndex + 1;
         } else {
-          return 0; // Or stop the animation by clearing the interval
+          clearInterval(interval); // Stop the animation by clearing the interval
+          return prevIndex; // Keep the index at the last word
         }
       });
     }, 250); // Adjust the interval as needed
@@ -52,4 +53,3 @@ const Editor: React.FC = () => {
 };
 
 export default Editor;
-
