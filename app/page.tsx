@@ -3,37 +3,49 @@ import Link from "next/link"
 import { siteConfig } from "@/config/site"
 import { buttonVariants } from "@/components/ui/button"
 
+async function uploadFile(formData: FormData) {
+  "use server";
+  const file =formData.get("file") as File;
+  console.log("File name: ", file.name);
+}
+
 export default function IndexPage() {
+  
   return (
     <section className="container grid items-center gap-6 pb-8 pt-6 md:py-10">
-      <div className="flex max-w-[980px] flex-col items-start gap-2">
-        <h1 className="text-3xl font-extrabold leading-tight tracking-tighter md:text-4xl">
-          Beautifully designed components <br className="hidden sm:inline" />
-          built with Radix UI and Tailwind CSS.
-        </h1>
-        <p className="max-w-[700px] text-lg text-muted-foreground">
-          Accessible and customizable components that you can copy and paste
-          into your apps. Free. Open Source. And Next.js 13 Ready.
-        </p>
-      </div>
-      <div className="flex gap-4">
-        <Link
-          href={siteConfig.links.docs}
-          target="_blank"
-          rel="noreferrer"
-          className={buttonVariants()}
-        >
-          Documentation
-        </Link>
-        <Link
-          target="_blank"
-          rel="noreferrer"
-          href={siteConfig.links.github}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          GitHub
-        </Link>
-      </div>
+      <form action={uploadFile}>
+        <input type="file" name="file" id="file" />
+        <button type="submit">Submit</button>
+      </form>
     </section>
   )
 }
+
+// pages/index.js
+// import { useState } from 'react';
+// import Link from 'next/link';
+
+// export default function Home() {
+//   const [fileContent, setFileContent] = useState('');
+
+//   const handleFileChange = async (event) => {
+//     const file = event.target.files[0];
+//     if (file) {
+//       const text = await file.text();
+//       setFileContent(text);
+//       // Optionally, save the text to the session storage or pass it directly to the next page
+//       sessionStorage.setItem('fileContent', text);
+//     }
+//   };
+
+//   return (
+//     <div>
+//       <input type="file" onChange={handleFileChange} accept=".txt" />
+//       {fileContent && (
+//         <Link href="/editor">
+//           <a>Go to Editor</a>
+//         </Link>
+//       )}
+//     </div>
+//   );
+// }
