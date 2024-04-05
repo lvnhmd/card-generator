@@ -1,6 +1,11 @@
 "use client"
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RoughNotation } from "react-rough-notation";
+
+interface KeywordPosition {
+  start: number;
+  end: number;
+}
 
 const keywordsList = {
   "Programming Languages": ["Python", "JavaScript", "Java", "C#", "PHP", "Ruby", "Golang", "TypeScript", "Swift", "Kotlin", "NodeJS", "Node.js", "Rust", "Scala", "Perl", "Haskell", "Clojure", "Elixir", "Lua", "Dart", "Julia", "R", "VHDL", "Verilog", "Matlab", "Solidity", "SQL", "PL/SQL", "T-SQL", "C", "C++", "Objective-C", "Assembly", "COBOL", "Fortran", "Pascal", "Ada", "Lisp", "Prolog", "Smalltalk", "Forth", "Erlang", "Bash", "Shell", "PowerShell", "Batch", "Groovy", "Racket", "Kotlin", "D", "Dylan", "F#", "OCaml", "Standard ML", "Go", "Crystal", "Nim","Node"],
@@ -10,88 +15,67 @@ const keywordsList = {
 };
 
 // Flatten and lowercase the keywords for easier comparison
-const flattenedKeywords = Object.values(keywordsList).flat().map(keyword => keyword.toLowerCase());
+const flattenedKeywords: string[] = Object.values(keywordsList).flat().map(keyword => keyword.toLowerCase());
 
 const Editor: React.FC = () => {
-  const [originalWords, setOriginalWords] = useState<string[]>([]);
-  const [normalizedWords, setNormalizedWords] = useState<string[]>([]);
-  const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1);
-  const [highlightedKeywords, setHighlightedKeywords] = useState<Set<number>>(new Set());
+  const [originalText, setOriginalText] = useState<string>("");
+  const [highlightedKeywords, setHighlightedKeywords] = useState<Set<KeywordPosition>>(new Set());
 
   useEffect(() => {
-    const storedText = sessionStorage.getItem('fileContent');
-    if (storedText) {
-      // Split the text into words, considering punctuation and special characters
-      const wordsArray = storedText.match(/[\w]+|\/|[^\w\s]/g) || [];
-      setOriginalWords(wordsArray);
-      console.log(`Original words: ${wordsArray}`);
-  
-      // Normalize originalWords for keyword checking
-      // This involves creating a parallel array where each word is normalized
-      const normalizedWordsArray = wordsArray.map(word => 
-        word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
-      );
-      console.log(`Normalized words: ${normalizedWordsArray}`);
-  
-      // Use normalizedWordsArray for keyword matching but maintain originalWords for display
-      setNormalizedWords(normalizedWordsArray);
-    }
+    const storedText = sessionStorage.getItem('fileContent') || "";
+    setOriginalText(storedText);
+
+    const wordsArray = storedText.match(/[\w]+|\/|[^\w\s]/g) || [];
+    const normalizedWordsArray = wordsArray.map(word => 
+      word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+    );
+
+    const keywordPositions: Set<KeywordPosition> = new Set();
+    let currentIndex = 0;
+    normalizedWordsArray.forEach((word, index) => {
+      if (flattenedKeywords.includes(word)) {
+        const start = currentIndex;
+        const end = start + wordsArray[index].length;
+        keywordPositions.add({ start, end });
+      }
+      currentIndex += wordsArray[index].length;
+      if (index < wordsArray.length - 1) {
+        currentIndex += storedText.substring(currentIndex).indexOf(wordsArray[index + 1]);
+      }
+    });
+
+    setHighlightedKeywords(keywordPositions);
   }, []);
-  
 
+  const renderTextWithHighlights = () => {
+    let lastIndex = 0;
+    const elements: JSX.Element[] = [];
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    highlightedKeywords.forEach(({ start, end }) => {
+      // Text before keyword
+      if (start > lastIndex) {
+        elements.push(<span key={`text-before-${start}`}>{originalText.slice(lastIndex, start)}</span>);
+      }
+      // Keyword text
+      elements.push(
+        <RoughNotation key={`keyword-${start}-${end}`} type="highlight" show={true} color="#FFD700" animate={false}>
+          {originalText.slice(start, end)}
+        </RoughNotation>
+      );
+      lastIndex = end;
+    });
 
-    if (originalWords.length > 0 && normalizedWords.length > 0) {
-      interval = setInterval(() => {
-        setCurrentWordIndex(prevIndex => {
-          const nextIndex = prevIndex + 1;
-
-          if (nextIndex < originalWords.length) {
-            if (flattenedKeywords.includes(normalizedWords[nextIndex])) {
-              setHighlightedKeywords(prev => new Set(prev).add(nextIndex));
-            }
-            return nextIndex;
-          } else {
-            // Additional logic to handle the last word
-            setTimeout(() => {
-              // Only remove the highlight if the last word is not a keyword
-              if (!flattenedKeywords.includes(normalizedWords[originalWords.length - 1])) {
-                setCurrentWordIndex(-1); // Reset currentWordIndex to remove highlight
-              }
-            }, 125); // Delay to briefly show the last word as read
-            clearInterval(interval);
-            return prevIndex;
-          }
-        });
-      }, 125);
-
-      return () => clearInterval(interval);
+    // Remaining text after last keyword
+    if (lastIndex < originalText.length) {
+      elements.push(<span key={`text-after-${lastIndex}`}>{originalText.slice(lastIndex)}</span>);
     }
-  }, [originalWords, normalizedWords]);
+
+    return elements;
+  };
 
   return (
     <div className="relative min-h-[500px] w-full max-w-screen-lg border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:shadow-lg">
-      {originalWords.map((word, index) => {
-        const isCurrentWord = index === currentWordIndex;
-        const isKeywordHighlighted = highlightedKeywords.has(index);
-        return (
-          <span key={index} style={{ display: 'inline-block', marginRight: '5px' }}>
-            {isCurrentWord && (
-              <RoughNotation type="highlight" show={true} color="#FFD700" animate={false}>
-                {word}
-              </RoughNotation>
-            )}
-            {!isCurrentWord && isKeywordHighlighted && (
-              <RoughNotation type="highlight" show={true} color="#FFD700" animate={false}>
-                {word}
-              </RoughNotation>
-            )}
-            {!isCurrentWord && !isKeywordHighlighted && word}
-          </span>
-        );
-      })}
+      {renderTextWithHighlights()}
     </div>
   );
 };
