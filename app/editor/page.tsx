@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { RoughNotation } from "react-rough-notation";
 
 const keywordsList = {
-  "Programming Languages": ["Python", "JavaScript", "Java", "C#", "PHP", "Ruby", "Golang", "TypeScript", "Swift", "Kotlin"],
-  "Frameworks": ["React", "Angular", "Vue", "Django", "Flask", "Laravel", ".NET", "Spring", "Express"],
+  "Programming Languages": ["Python", "JavaScript", "Java", "C#", "PHP", "Ruby", "Golang", "TypeScript", "Swift", "Kotlin", "NodeJS", "Node.js", "Rust", "Scala", "Perl", "Haskell", "Clojure", "Elixir", "Lua", "Dart", "Julia", "R", "VHDL", "Verilog", "Matlab", "Solidity", "SQL", "PL/SQL", "T-SQL", "C", "C++", "Objective-C", "Assembly", "COBOL", "Fortran", "Pascal", "Ada", "Lisp", "Prolog", "Smalltalk", "Forth", "Erlang", "Bash", "Shell", "PowerShell", "Batch", "Groovy", "Racket", "Kotlin", "D", "Dylan", "F#", "OCaml", "Standard ML", "Go", "Crystal", "Nim","Node"],
+  "Frameworks": ["React", "Angular", "Vue", "Django", "Flask", "Laravel", ".NET", "Spring", "Express", "Svelte", "Ruby on Rails", "Next.js", "Nuxt.js", "Gatsby", "Jest", "Mocha", "Chai", "Cypress", "Selenium", "Puppeteer", "Playwright", "Symfony", "NextJS", "NuxtJS"],
   "Databases": ["MySQL", "PostgreSQL", "MongoDB", "Redis", "SQLite", "Oracle", "SQL Server", "DynamoDB"],
-  "Technologies": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "GraphQL", "REST", "gRPC", "WebSockets"],
+  "Technologies": ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "GraphQL", "REST", "gRPC", "WebSockets", "Elastic"],
 };
 
 // Flatten and lowercase the keywords for easier comparison
@@ -21,17 +21,23 @@ const Editor: React.FC = () => {
   useEffect(() => {
     const storedText = sessionStorage.getItem('fileContent');
     if (storedText) {
-        // Split the original text into words for display without removing punctuation
-        const wordsArray = storedText.split(/\s+/);
-        setOriginalWords(wordsArray);
-
-        // Create a normalized version of the text for keyword checking
-        // This involves removing punctuation and handling paired keywords
-        const normalizedText = storedText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
-        const normalizedWordsArray = normalizedText.split(/\s+|\/+/);
-        setNormalizedWords(normalizedWordsArray);
+      // Split the text into words, considering punctuation and special characters
+      const wordsArray = storedText.match(/[\w]+|\/|[^\w\s]/g) || [];
+      setOriginalWords(wordsArray);
+      console.log(`Original words: ${wordsArray}`);
+  
+      // Normalize originalWords for keyword checking
+      // This involves creating a parallel array where each word is normalized
+      const normalizedWordsArray = wordsArray.map(word => 
+        word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "")
+      );
+      console.log(`Normalized words: ${normalizedWordsArray}`);
+  
+      // Use normalizedWordsArray for keyword matching but maintain originalWords for display
+      setNormalizedWords(normalizedWordsArray);
     }
-}, []);
+  }, []);
+  
 
 
   useEffect(() => {
