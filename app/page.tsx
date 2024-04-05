@@ -17,7 +17,7 @@ const Home: React.FC = () => {
     if (typeof window !== 'undefined' && file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const arrayBuffer = await file.arrayBuffer();
       // Use l-mammoth here
-      LMammoth.extractRawText({ arrayBuffer })
+      LMammoth.convertToHtml({ arrayBuffer })
         .then((result: { value: string }) => {
           setFileContent(result.value);
           sessionStorage.setItem('fileContent', result.value);
