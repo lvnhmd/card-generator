@@ -17,14 +17,16 @@ const escapeRegExp = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 
-const highlightKeywords = (htmlContent, keywordsList) => {
+const highlightKeywords = (htmlContent: string, keywordsList: Record<string, string[]>, keywordsFound: string[]): string => {
     let updatedContent = htmlContent;
 
     Object.values(keywordsList).flat().forEach((keyword) => {
         const escapedKeyword = escapeRegExp(keyword);
         const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'gi');
-        updatedContent = updatedContent.replace(regex, `<mark>${keyword}</mark>`);
-        console.log(updatedContent);
+        if (regex.test(updatedContent)) {
+            keywordsFound.push(keyword); // Add keyword to the array if found
+            updatedContent = updatedContent.replace(regex, `<mark>${keyword}</mark>`);
+        }
     });
 
     return updatedContent;
@@ -32,6 +34,8 @@ const highlightKeywords = (htmlContent, keywordsList) => {
 
 const EditorPage: React.FC = () => {
     const [content, setContent] = useState('');
+    const [highlightedKeywords, setHighlightedKeywords] = useState<string[]>([]);
+
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -42,16 +46,14 @@ const EditorPage: React.FC = () => {
     });
 
     useEffect(() => {
-        // Load and preprocess the content from sessionStorage
         const storedContent = sessionStorage.getItem('fileContent') || '<p>Edit your document here</p>';
-        const highlightedContent = highlightKeywords(storedContent, keywordsList);
+        let keywordsFound: string[] = [];
+        const highlightedContent = highlightKeywords(storedContent, keywordsList, keywordsFound);
         setContent(highlightedContent);
-        console.log(highlightedContent);
+        setHighlightedKeywords(keywordsFound);
 
-        // Update the editor content directly if it's already initialized
         if (editor) {
             editor.commands.setContent(highlightedContent);
-
         }
     }, [editor]);
 
@@ -62,6 +64,14 @@ const EditorPage: React.FC = () => {
     return (
         <div className="relative w-full max-w-screen-lg">
             <EditorContent editor={editor} className="relative min-h-[500px] w-full max-w-screen-lg border-muted bg-background sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:shadow-lg" />
+            <div className="keywords-list">
+            <h3>Highlighted Keywords:</h3>
+            <ul>
+                {highlightedKeywords.map((keyword, index) => (
+                    <li key={index}>{keyword}</li>
+                ))}
+            </ul>
+        </div>
         </div>
     );
 };
