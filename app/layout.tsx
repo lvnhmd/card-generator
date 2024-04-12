@@ -6,6 +6,16 @@ import { fontSans } from "@/lib/fonts"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
 import React from "react"
+import { SiteHeader } from "@/components/site-header"
+import { Bai_Jamjuree } from 'next/font/google'
+
+
+const bj = Bai_Jamjuree({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  weight: "400"
+})
+
 
 export const metadata: Metadata = {
   title: {
@@ -36,16 +46,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <body
           className={cn(
             "min-h-screen bg-background font-sans antialiased",
-            fontSans.variable
+            bj.variable
           )}
         >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <div className="relative flex min-h-screen flex-col">
-              {/* <SiteHeader /> */}
-              <div className="flex-1">{children}</div>
-            </div>
-            {/* <TailwindIndicator /> */}
-          </ThemeProvider>
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
         </body>
       </html>
     </>

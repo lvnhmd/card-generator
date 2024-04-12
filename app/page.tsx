@@ -5,6 +5,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 // Import l-mammoth directly
 import * as LMammoth from 'l-mammoth';
+import {
+  PageActions,
+  PageHeader,
+  PageHeaderDescription,
+  PageHeaderHeading,
+} from "@/components/page-header"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from '@/lib/utils';
+import { Input } from "@/components/ui/input"
 
 const Home: React.FC = () => {
   const [fileContent, setFileContent] = useState<string>('');
@@ -13,10 +22,8 @@ const Home: React.FC = () => {
     const file = event.target.files ? event.target.files[0] : null;
     if (!file) return;
 
-    // Ensure this code runs only in the browser
     if (typeof window !== 'undefined' && file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const arrayBuffer = await file.arrayBuffer();
-      // Use l-mammoth here
       LMammoth.convertToHtml({ arrayBuffer })
         .then((result: { value: string }) => {
           setFileContent(result.value);
@@ -24,19 +31,27 @@ const Home: React.FC = () => {
         })
         .catch((err: Error) => console.error(err));
     } else {
-      // Handle unsupported file types or server-side execution
       console.error("Unsupported file type or not in a browser environment");
     }
   };
 
   return (
-    <div>
-      <input type="file" onChange={handleFileChange} accept=".docx" />
-      {fileContent && (
-        <Link href="/editor">Go</Link>
-      )}
+    <div className="container relative">
+      <PageHeader>
+        <PageHeaderHeading>From Job Spec to Flashcards</PageHeaderHeading>
+        <PageHeaderDescription>
+          Transform technical job specifications into actionable interview prep with our smart flashcard generator. Get ready to ace your next technical interview.
+        </PageHeaderDescription>
+        <PageActions>
+          <Input type="file" onChange={handleFileChange} accept=".docx" />
+          {fileContent && (
+            <Link href="/editor" className={cn(buttonVariants())}>Go</Link>
+          )}
+        </PageActions>
+      </PageHeader>
     </div>
   );
 };
 
 export default Home;
+
